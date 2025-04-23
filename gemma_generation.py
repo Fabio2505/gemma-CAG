@@ -24,7 +24,7 @@ pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
 with open(args.input_path, "r") as f:
     original_dataset = json.load(f)
 
-# Pulisci il file e scrivi l'apertura [
+#  [
 with open(args.output_path, "w") as f:
     f.write("[\n")
 
@@ -62,6 +62,6 @@ for i, sample in enumerate(tqdm(original_dataset, desc="Generazione risposte"), 
                 written_any = True
         formatted_data = []
 
-# Chiudi l’array
+# ]
 with open(args.output_path, "a") as f:
     f.write("\n]\n")
