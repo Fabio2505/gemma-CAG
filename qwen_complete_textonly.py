@@ -18,7 +18,7 @@ from torch.backends.cuda import SDPBackend
 from torch.backends.cuda import flash_sdp_enabled
 print("FlashAttention attivo:", flash_sdp_enabled())
 
-#Questo per forzare un backend compatibile con la sliding window, altrimenti l'attenzione qudratica alloca satura la memoria a 3200 token
+#Questo per forzare un backend compatibile con la sliding window, altrimenti l'attenzione qudratica alloca tutta la mem a 3200 token
 
 
 
@@ -31,9 +31,9 @@ active_backends = {
 
 
 
-torch.backends.cuda.enable_flash_sdp(False)
-torch.backends.cuda.enable_math_sdp(True)
-torch.backends.cuda.enable_mem_efficient_sdp(False)
+#torch.backends.cuda.enable_flash_sdp(False)
+#torch.backends.cuda.enable_math_sdp(True)
+#torch.backends.cuda.enable_mem_efficient_sdp(False)
 
 
 
@@ -82,7 +82,7 @@ def build_chat_messages(context, question):
     return [
         {
             "role": "system",
-            "content": "You are a helpful assistant that answers shortly to questions based on the context."
+            "content": "You are a helpful assistant that answers very shortly to questions based on the context."
         },
         {
             "role": "user",
@@ -91,12 +91,12 @@ def build_chat_messages(context, question):
     ]
 
 def preprocess_with_cache(model, tokenizer, messages):
-    prompt = "".join(f"<|{m['role']}|>{m['content']}" for m in messages) + "<|assistant|>"
+    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     enc = tokenizer(prompt,
                      return_tensors="pt",
                        padding=True,
                          truncation=True,
-                           max_length=4000 #<------------------------------- MAX LENGHT
+                           max_length=24500 #<------------------------------- MAX LENGHT
                            ).to(model.device)    
 
     num_total_tokens = enc.input_ids.shape[1]
@@ -120,7 +120,8 @@ def preprocess_with_cache(model, tokenizer, messages):
 
 def generate_with_cache(model, tokenizer, kv_cache, input_ids, max_new_tokens=64):
     generated = []
-    eos = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    #eos = tokenizer.convert_tokens_to_ids("<|im_end|>")     MODIFICATO ORA
+    eos = tokenizer.eos_token_id
     device = input_ids.device
 
     start_pos = kv_cache.key_cache[0].shape[2]
@@ -156,8 +157,10 @@ def main(args):
         args.model_path,
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
-        local_files_only=True
-    ).to("cuda:0").eval()
+        local_files_only=True,
+        attn_implementation="flash_attention_2",
+        device_map={"": "cuda:0"}
+    ).eval() #.to("cuda:0").
 
     clip_model, clip_processor, index, index_map, wiki = load_clip_and_index(args)
 
@@ -192,6 +195,7 @@ def main(args):
 
             print("[QUESTION]", q)
             print("[ANSWER]", answer)
+            print("[REFERENCE]",ref)
 
             used = torch.cuda.memory_allocated(device="cuda:0") / (1024 ** 2)
             print(f"[GPU MEM] After example {i}: {used:.2f} MiB")
@@ -231,8 +235,9 @@ if __name__ == "__main__":
     p.add_argument("--index_path", required=True)
     p.add_argument("--index_json_path", required=True)
     p.add_argument("--kb_wikipedia_path", required=True)
-    p.add_argument("--top_k", type=int, default=3)
+    p.add_argument("--top_k", type=int, default=10)
     main(p.parse_args())
+
 
 
 
