@@ -64,19 +64,18 @@ if __name__ == "__main__":
                         help="cartella contenente knn.index")
     parser.add_argument("--index_json_path", required=True,
                         help="cartella contenente knn.json")
-    parser.add_argument("--n_clusters", type=int, default=5, #______________________---N clusters
+    parser.add_argument("--n_clusters", type=int, default=50000, #______________________---N clusters
                         help="numero di cluster da creare")
     args = parser.parse_args()
 
-    # Carica indice e feature immagine
+   
     idx, idx_map = load_index_and_mapping(args.index_path, args.index_json_path)
     img_feats = reconstruct_all_features(idx)  # (N, D)
     doc_ids = [entry[0] for entry in idx_map]
 
-    # Clustering solo su feature visive
+
     labels, cents = cluster_features(img_feats, args.n_clusters)
 
-    # Salvataggio metadata (senza ordinamento interno)
     save_cluster_metadata(labels, doc_ids, cents, img_feats)
 
     print("[DONE] Clustering visivo completato.")
