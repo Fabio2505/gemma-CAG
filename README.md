@@ -26,6 +26,7 @@ retrieval_clip_based.py / retrieval_clip_based_with_images.py	CLIP-based retriev
 qwen_complete_textonly.py	Full text-only generation with Qwen
 kv_cache_con_problemi.py	Experimental / debug KV cache handling
 requirements.txt	List of dependencies
+<img width="907" height="703" alt="AAAAAAAAAA" src="https://github.com/user-attachments/assets/00e4801a-249d-4dcc-810c-54a8b09a572d" />
 
-<img width="1125" height="844" alt="image" src="https://github.com/user-attachments/assets/67407503-5f0b-4101-bd6f-50de1da9cab2" />
+
 
